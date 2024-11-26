@@ -9,6 +9,9 @@ import {
   Text,
   Button,
   Center,
+  VStack,
+  Divider,
+  AbsoluteCenter,
 } from "@chakra-ui/react";
 import { Pagination, A11y } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -18,6 +21,11 @@ import { useNavigate } from "@tanstack/react-router";
 // Import Swiper styles
 import "swiper/css";
 import "swiper/css/pagination";
+
+type SignupOptionType = {
+  icon: string;
+  text: string;
+};
 
 export const Route = createFileRoute("/")({
   async beforeLoad() {
@@ -71,15 +79,40 @@ function RouteComponent() {
     }
   }, [currentSlide, navigate]);
 
+  const siginButtonOptions: SignupOptionType[] = [
+    {
+      icon: "/public/facebook-icon.png",
+      text: "Continue with Facebook",
+    },
+    {
+      icon: "/public/google-icon.png",
+      text: "Continue with Google",
+    },
+    {
+      icon: "/public/apple-icon.png",
+      text: "Continue with Apple",
+    },
+  ];
+
   return (
-    <Center>
+    <Center pt="1.5rem">
       <Swiper
         modules={[Pagination, A11y]}
         spaceBetween={50}
         slidesPerView={1}
         onSlideChange={(swiper) => setCurrentSlide(swiper.activeIndex)}
         onSwiper={(swiper) => (swiperRef.current = swiper)} // Save Swiper instance
-        pagination={{ clickable: true }}
+        pagination={{
+          clickable: true,
+          renderBullet: (index, className) => {
+            // Custom bullet style for the first slide
+            const isActiveSlide = index === currentSlide && index === 0;
+            return `<span classname="${className}" style="background-color: ${
+              isActiveSlide ? "#8C5EB9" : "#ccc"
+            } width: 5px; height: 5px; border-radius: 50%; margin: 0 4px;"></span>`;
+          },
+          enabled: currentSlide === 0, // Disable pagination for the second slide
+        }}
       >
         {/* Slide 1 */}
         <SwiperSlide>
@@ -124,7 +157,7 @@ function RouteComponent() {
                   fontWeight={"normal"}
                   lineHeight={"30.14px"}
                   textAlign={"center"}
-                  color="var(--neutral-100)"
+                  color="var(--neutral-100)" // Adjust neutral shade as necessary
                   marginTop={"5px"}
                 >
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
@@ -135,6 +168,7 @@ function RouteComponent() {
                 px="14px"
                 py="15.6px"
                 bgColor={"var(--primary)"}
+                borderRadius={"54px"}
                 w="full"
                 _hover={{ bgColor: "var(--primary)" }}
                 onClick={handleButtonClick}
@@ -160,53 +194,78 @@ function RouteComponent() {
             minHeight={"100vh"}
             flexDirection={"column"}
             alignItems={"center"}
-            gap="4rem"
           >
             <Image
-              src="/swiftaid-onboarding-icon.png"
-              boxSize={"299px"}
+              src="/swiftaid-onboarding-icon-2.png"
               objectFit={"cover"}
               alt="onboarding-icon"
+              width="206.24px"
+              height="213px"
             />
-            <Box
-              border="1px solid var(--neutral-300)"
-              px={"20.8px"}
-              pt={"7px"}
-              pb={"41.61px"}
-              display="flex"
-              flexDirection={"column"}
-              gap={"2.75rem"}
-              borderTopRadius={"34.67px"}
+            <Heading
+              as="h2"
+              fontFamily={"var(--font-urbanist)"}
+              fontWeight={"bold"}
+              fontSize={"1.75rem"}
+              lineHeight={"33px"}
+              textAlign={"center"}
+              my={"1rem"}
             >
-              <Box>
-                <Heading
-                  as="h2"
-                  fontSize={"1.35rem"}
-                  fontWeight={"semibold"}
-                  lineHeight={"30.14px"}
-                  textAlign={"center"}
-                  color="var(--neutral)"
-                  fontFamily={"var(--font-poppins)"}
+              Get started <br />
+              with SwiftAid
+            </Heading>
+            {/* Buttons */}
+            <VStack spacing={"1.5rem"}>
+              <VStack spacing={"0.75rem"} width={"19rem"}>
+                {siginButtonOptions.map((buttonOption, index) => (
+                  <Button
+                    leftIcon={
+                      <Image src={buttonOption.icon} boxSize="20.76px" />
+                    }
+                    px={"27.68px"}
+                    py={"15.57px"}
+                    border="1px solid #eeeeee"
+                    textAlign={"center"}
+                    width={"full"}
+                    height="52px"
+                    bgColor={"transparent"}
+                    _focus={{
+                      borderColor: "var(--teritary)",
+                      bgColor: "transparent",
+                    }}
+                    _hover={{
+                      borderColor: "var(--teritary)",
+                      bgColor: "transparent",
+                    }}
+                    key={index}
+                  >
+                    <Text
+                      color={"var(--neutral)"}
+                      fontSize={"sm"}
+                      fontWeight={"semibold"}
+                    >
+                      {buttonOption.text}
+                    </Text>
+                  </Button>
+                ))}
+              </VStack>
+              <Box position="relative" padding="9px">
+                <Divider borderColor="#eeeeee" />
+                <AbsoluteCenter
+                  bg="white"
+                  px="4"
+                  fontWeight="semibold"
+                  fontSize="sm"
                 >
-                  The Best & Fast Emergency Response App
-                </Heading>
-                <Text
-                  as="p"
-                  fontSize={"sm"}
-                  fontWeight={"normal"}
-                  lineHeight={"30.14px"}
-                  textAlign={"center"}
-                  color="var(--neutral-100)"
-                  marginTop={"5px"}
-                >
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                  do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                </Text>
+                  or
+                </AbsoluteCenter>
               </Box>
+
               <Button
                 px="14px"
                 py="15.6px"
                 bgColor={"var(--primary)"}
+                borderRadius={"54px"}
                 w="full"
                 _hover={{ bgColor: "var(--primary)" }}
                 onClick={handleButtonClick}
@@ -218,10 +277,10 @@ function RouteComponent() {
                   fontSize={"sm"}
                   color="var(--white)"
                 >
-                  Let's Get Started
+                  Sign in with password
                 </Text>
               </Button>
-            </Box>
+            </VStack>
           </Flex>
         </SwiperSlide>
       </Swiper>

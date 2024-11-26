@@ -1,10 +1,12 @@
 import * as Yup from "yup";
 
 export const signupSchema = Yup.object({
-  personal: Yup.string().required("Personal name cannot be blank"),
   email: Yup.string()
     .email("Invalid email address")
     .required("Please provide your email address"),
+  contact: Yup.string()
+    .matches(/^[0-9]{10}$/, "Invalid phone number")
+    .required("Contact is required"),
   password: Yup.string()
     .min(8, "Password must be at least 8 characters")
     .matches(/[a-zA-Z]/, "Password must contain at least one letter")
@@ -16,7 +18,7 @@ export const signupSchema = Yup.object({
     .matches(/[a-z]/, "Password must contain at least one lowercase letter")
     .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
     .required("Password is required"),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref("password")], "Passwords must match")
-    .required("Please enter your password again"),
+  rememberMe: Yup.boolean()
+    .required("Please select the remember me option")
+    .default(false),
 });
