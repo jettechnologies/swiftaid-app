@@ -5,6 +5,7 @@ import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { ChakraProvider } from "@chakra-ui/react";
 import "../style/globals.scss";
 import { routeTree } from "./routeTree.gen";
+import { ToastProvider } from "./context";
 
 // Set up a Router instance
 const router = createRouter({
@@ -17,12 +18,26 @@ declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router;
   }
+
+  interface HistoryState {
+    email: string;
+  }
 }
+
+// const theme = extendTheme({
+//   colors: {
+//     primary: {
+//       100: "#a5c339",
+//     },
+//   },
+// });
 
 function App() {
   return (
     <ChakraProvider resetCSS>
-      <RouterProvider router={router} />
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
     </ChakraProvider>
   );
 }

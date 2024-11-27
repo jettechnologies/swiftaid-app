@@ -90,7 +90,7 @@ export const InputField = ({
     background: "#fff",
     height: "56px",
     borderRadius: inputBorderRadius,
-    // border: "1px solid var(--neutral-100)",
+    // border: "1px solid var(--neutral)",
   };
 
   const error = formState.errors[name];
@@ -288,7 +288,7 @@ export const CheckboxField = ({
       <Checkbox
         {...register(name)}
         size="md"
-        color={color}
+        // color={color}
         colorScheme="green"
         sx={{
           "span.chakra-checkbox__control": {
@@ -299,13 +299,15 @@ export const CheckboxField = ({
           },
         }}
       >
-        <Text
-          color={color}
-          textTransform="capitalize"
-          sx={{ fontSize, fontWeight }}
-        >
-          {label}
-        </Text>
+        {label && (
+          <Text
+            color={color}
+            textTransform="capitalize"
+            sx={{ fontSize, fontWeight }}
+          >
+            {label}
+          </Text>
+        )}
       </Checkbox>
       {error && (
         <Text

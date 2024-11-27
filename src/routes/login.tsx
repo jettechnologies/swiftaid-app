@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Center,
   Box,
@@ -14,9 +14,15 @@ import {
 } from "@chakra-ui/react";
 import { InputField, CheckboxField } from "../components/forms";
 import { Mail, Phone, Lock } from "lucide-react";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm, FormProvider, Form } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { signupSchema } from "../utils/schema";
+import { app, db } from "../firebase-config";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { useToastContext } from "../context";
+import { getDoc, setDoc, doc } from "firebase/firestore";
+import { useAuthProvider } from "../hooks";
+import { AuthProvider } from "../types";
 
 export const Route = createFileRoute("/login")({
   component: RouteComponent,
@@ -30,26 +36,90 @@ type SignupFormType = {
 };
 
 function RouteComponent() {
+  const auth = getAuth(app);
+  const { openToast } = useToastContext();
+  const { handleProviderSignIn } = useAuthProvider(db);
+  const navigate = useNavigate();
+
   const methods = useForm<SignupFormType>({
     resolver: yupResolver(signupSchema),
     defaultValues: {
       rememberMe: false,
     },
   });
-  const onSubmit = (data: SignupFormType) => console.log(data);
 
-  const signupIcons: { name: string; icon: string }[] = [
+  // Handle manual signup
+  const onSubmit = async (data: SignupFormType) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        data.email,
+        data.password
+      );
+
+      const user = userCredential.user;
+      const userData = await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        fullname: "",
+        username: "",
+        email: data.email,
+        contact: data.contact,
+        country: "",
+        dob: "",
+        occupation: "",
+        profileImg: "",
+        createdAt: new Date().toISOString(),
+      });
+
+      console.log(user);
+      methods.reset();
+      openToast("User created successfully", "success");
+      navigate({
+        to: "/select-country",
+        state: { email: data.email },
+      });
+    } catch (error: any) {
+      console.error("Error creating user:", error);
+      openToast(`Signup failed: ${error.message}`, "error");
+      // reset();
+    }
+  };
+
+  // sigin using provider popup
+  const signinWithProvider = async (provider: AuthProvider) => {
+    try {
+      const user = await handleProviderSignIn(provider);
+      openToast(`${provider} sign-in successful`, "success");
+      // navigate({ to: "/select-country" });
+      navigate({
+        to: "/select-country",
+        state: { email: user?.email ?? "" },
+      });
+      console.log("Signed in user:", user);
+    } catch (error: any) {
+      openToast(
+        `Failed to sign in with ${provider}: ${error.message}`,
+        "error"
+      );
+      console.error("Sign-in error:", error);
+    }
+  };
+
+  const signupIcons = [
     {
       name: "Facebook",
-      icon: "/public/facebook-icon.png",
+      icon: "facebook-icon.png",
+      onClick: () => signinWithProvider("facebook"),
     },
     {
       name: "Google",
-      icon: "/public/google-icon.png",
+      icon: "/google-icon.png",
+      onClick: () => signinWithProvider("google"),
     },
     {
       name: "Apple",
-      icon: "/public/apple-icon.png",
+      icon: "/apple-icon.png",
+      // onClick: () => handleProviderSignIn("apple"),
     },
   ];
 
@@ -61,16 +131,10 @@ function RouteComponent() {
           Account
         </Heading>
         <FormProvider {...methods}>
-          <VStack
-            as="form"
-            spacing="1rem"
-            mt="1.5rem"
-            onSubmit={methods.handleSubmit(onSubmit)}
-          >
+          <Box as="form" mt="1.5rem" onSubmit={methods.handleSubmit(onSubmit)}>
             <InputField
               name="email"
               type="text"
-              labelTextTransform="uppercase"
               placeholder="email address"
               icon={<Mail size="14px" color="var(--neutral)" />}
               fontWeight="semibold"
@@ -78,7 +142,7 @@ function RouteComponent() {
               bgColor={"#FAFAFA"}
             />
             <InputField
-              name="phone"
+              name="contact"
               type="text"
               labelTextTransform="uppercase"
               placeholder="contact"
@@ -98,7 +162,7 @@ function RouteComponent() {
               fontWeight="semibold"
               bgColor={"#FAFAFA"}
             />
-            <Box display="flex" flexDirection="column" width={"full"}>
+            <Box display="flex" flexDirection="column" width={"full"} mt="1rem">
               <CheckboxField
                 name="rememberMe"
                 label="Remember me"
@@ -119,7 +183,10 @@ function RouteComponent() {
               bgColor={"var(--primary)"}
               borderRadius={"54px"}
               w="full"
+              mt="1rem"
               _hover={{ bgColor: "var(--primary)" }}
+              isLoading={methods.formState.isSubmitting}
+              loadingText="Logining..."
               // onClick={handleButtonClick}
             >
               <Text
@@ -132,7 +199,7 @@ function RouteComponent() {
                 Sign up
               </Text>
             </Button>
-          </VStack>
+          </Box>
         </FormProvider>
         <Box mt="1.5rem">
           <Box position="relative" padding="9px" mb="2rem">
@@ -148,12 +215,15 @@ function RouteComponent() {
           </Box>
           <HStack spacing={"1rem"} height="50px" justifyContent={"center"}>
             {signupIcons.map((icon) => (
-              <Box
+              <Button
+                variant={"outline"}
                 border={"1px solid #eeeeee"}
                 py="0.9rem"
                 px="1.65rem"
                 borderRadius="15.06px"
                 cursor={"pointer"}
+                key={icon.name}
+                onClick={icon.onClick}
               >
                 <Image
                   src={icon.icon}
@@ -161,7 +231,7 @@ function RouteComponent() {
                   boxSize={"20.07px"}
                   objectFit="cover"
                 />
-              </Box>
+              </Button>
             ))}
           </HStack>
         </Box>

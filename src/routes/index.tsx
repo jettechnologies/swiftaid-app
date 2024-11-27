@@ -17,10 +17,14 @@ import { Pagination, A11y } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Swiper as SwiperType } from "swiper";
 import { useNavigate } from "@tanstack/react-router";
+import { useToastContext } from "../context";
+import { useAuthProvider } from "../hooks";
+import { db } from "../firebase-config";
 
 // Import Swiper styles
 import "swiper/css";
 import "swiper/css/pagination";
+import { AuthProvider } from "../types";
 
 type SignupOptionType = {
   icon: string;
@@ -66,6 +70,8 @@ export const Route = createFileRoute("/")({
 function RouteComponent() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const swiperRef = useRef<SwiperType | null>(null); // Ref to store the Swiper instance
+  const { handleProviderSignIn } = useAuthProvider(db);
+  const { openToast } = useToastContext();
   const navigate = useNavigate();
 
   const handleButtonClick = useCallback(() => {
@@ -79,17 +85,37 @@ function RouteComponent() {
     }
   }, [currentSlide, navigate]);
 
-  const siginButtonOptions: SignupOptionType[] = [
+  const signinWithProvider = async (provider: AuthProvider) => {
+    try {
+      const user = await handleProviderSignIn(provider);
+      openToast(`${provider} sign-in successful`, "success");
+      navigate({
+        to: "/select-country",
+        state: { email: user?.email ?? "" },
+      });
+      console.log("Signed in user:", user);
+    } catch (error: any) {
+      openToast(
+        `Failed to sign in with ${provider}: ${error.message}`,
+        "error"
+      );
+      console.error("Sign-in error:", error);
+    }
+  };
+
+  const siginButtonOptions = [
     {
-      icon: "/public/facebook-icon.png",
+      icon: "/facebook-icon.png",
       text: "Continue with Facebook",
+      onClick: () => signinWithProvider("facebook"),
     },
     {
-      icon: "/public/google-icon.png",
+      icon: "/google-icon.png",
       text: "Continue with Google",
+      onClick: () => signinWithProvider("google"),
     },
     {
-      icon: "/public/apple-icon.png",
+      icon: "/apple-icon.png",
       text: "Continue with Apple",
     },
   ];
@@ -238,6 +264,7 @@ function RouteComponent() {
                       bgColor: "transparent",
                     }}
                     key={index}
+                    onClick={buttonOption?.onClick}
                   >
                     <Text
                       color={"var(--neutral)"}

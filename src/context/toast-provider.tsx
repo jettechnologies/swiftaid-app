@@ -1,21 +1,21 @@
 import { useToast, Box, Flex, Text, CloseButton } from "@chakra-ui/react";
 import React from "react";
 import { Info, TriangleAlert, CheckCircle, Ban } from "lucide-react";
-import { useLocation } from "@tanstack/react-router";
+// import { useLocation } from "@tanstack/react-router";
 
 export interface ToastProviderProps {
   children: React.ReactNode;
 }
 
 export type ToastStatus = "success" | "error" | "warning" | "info";
-
-export type ToastContextValues = {
+type ToastContextValues = {
   openToast: (message: string, status: ToastStatus) => void;
 };
 
 const createToastContext = () =>
   React.createContext<ToastContextValues | null>(null);
-export const ToastContext = createToastContext();
+
+const ToastContext = createToastContext();
 
 export const ToastProvider = ({ children }: ToastProviderProps) => {
   const toast = useToast();
@@ -110,4 +110,16 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
   return (
     <ToastContext.Provider value={values}>{children}</ToastContext.Provider>
   );
+};
+
+export const useToastContext = () => {
+  const context = React.useContext(ToastContext);
+
+  if (context === null) {
+    throw new Error(
+      "Toast context is missing. You probably forgot to wrap the component depending on toast in <ToastProvider />"
+    );
+  }
+
+  return context as ToastContextValues;
 };
